@@ -1,0 +1,72 @@
+# .github/workflows/pinger.yml
+
+name: 'Ping Render Apps and Log Run'
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  # Runs the cron job
+  schedule:
+    # This runs every 8 minutes. 
+    # Use '*/5 * * * *' for every 5 minutes or '*/10 * * * *' for every 10 minutes.
+    - cron: '*/5 * * * *'
+
+jobs:
+  ping_and_log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ping the Render Apps
+        run: |
+          echo "Pinging applications..."
+          # Use curl with -sS to be silent but still show errors. > /dev/null discards the output.
+          # Replace the URLs with your actual Render app URLs.
+          curl -sS "https://tallywise-ai-service.onrender.com/" > /dev/null || echo "First app failed to respond."
+          curl -sS "https://tallywise-ai-service.netlify.app/" > /dev/null || echo "Second app failed to respond."
+          curl -sS "https://arch-calculator.streamlit.app/" > /dev/null || echo "First app failed to respond."
+          curl -sS "https://candour-credit-api.onrender.com/" > /dev/null || echo "Second app failed to respond."
+          curl -sS "https://candour-credit-api-v2.onrender.com/" > /dev/null || echo "First app failed to respond."
+          curl -sS "https://arch-calculator-api.onrender.com/" > /dev/null || echo "Second app failed to respond."
+          # Add more curl lines for other apps if needed.
+          echo "Pinging complete."
+
+      - name: Update and Commit Run Count
+        run: |
+          # Define the files we will use
+          COUNT_FILE="run_count.txt"
+          LOG_FILE="last_run.log"
+          
+          # --- Update Run Count ---
+          # Create the file with 0 if it doesn't exist
+          if [ ! -f $COUNT_FILE ]; then
+            echo 0 > $COUNT_FILE
+          fi
+          
+          # Read the current count, increment it, and write it back
+          COUNT=$(cat $COUNT_FILE)
+          COUNT=$((COUNT + 1))
+          echo $COUNT > $COUNT_FILE
+          
+          # --- Update Last Run Log ---
+          # Get the current date and time for a nice log message
+          DATE=$(date)
+          echo "Last run triggered at: $DATE" > $LOG_FILE
+          echo "Total runs so far: $COUNT" >> $LOG_FILE
+          
+          # --- Commit and Push the changes ---
+          # Configure git with the Actions bot user
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Add the files to staging
+          git add $COUNT_FILE $LOG_FILE
+          
+          # Commit the changes with a descriptive message
+          # '[skip ci]' is often used to prevent this commit from triggering other CI/CD workflows
+          git commit -m "chore: Update run count to $COUNT [skip ci]"
+          
+          # Push the changes back to the repository
+          git push
