@@ -29,12 +29,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }} 
 
 
-jobs:
-  ping_and_log:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
       - name: Ping the Render Apps
         run: |
