@@ -3,14 +3,31 @@
 name: 'Ping Render Apps and Log Run'
 
 on:
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
-  # Runs the cron job
   schedule:
-    # This runs every 8 minutes. 
-    # Use '*/5 * * * *' for every 5 minutes or '*/10 * * * *' for every 10 minutes.
-    - cron: '*/5 * * * *'
+    - cron: '*/8 * * * *'
+
+jobs:
+  ping_and_log:
+    # ------------------------------------------------------------------- #
+    # ADD THIS PERMISSIONS BLOCK
+    # This grants the GITHUB_TOKEN write permission for the repository's
+    # contents, which is required for pushing commits.
+    permissions:
+      contents: write
+    # ------------------------------------------------------------------- #
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        # We need to use a token with write access to push the changes
+        uses: actions/checkout@v4
+        with:
+          # This is not strictly necessary when using the permissions key
+          # but is good practice to be explicit.
+          # The default GITHUB_TOKEN will now have write access.
+          token: ${{ secrets.GITHUB_TOKEN }} 
+
 
 jobs:
   ping_and_log:
